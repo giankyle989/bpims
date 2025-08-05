@@ -12,6 +12,6 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/employee", employeeRoutes);
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Server running on port", process.env.PORT || 3000);
+app.listen(process.env.PORT || 5000, () => {
+  console.log("Server running on port", process.env.PORT || 5000);
 });
