@@ -1,20 +1,46 @@
 import { Request, Response } from "express";
 import { Prisma, PrismaClient } from "@prisma/client";
+import { uploadImageToS3 } from "src/utils/uploadImageToS3";
 
 const prisma = new PrismaClient();
 
-export const getEmployees = async (_req: Request, res: Response) => {
+export const getEmployees = async (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || "5";
+  const searchValue = (req.query.searchValue as string) || "";
+  const searchKey = (req.query.searchKey as string) || "username";
+
+  const skip = (page - 1) * Number(limit);
+
   try {
-    const employees = await prisma.employee.findMany({
-      where: {
-        deletedAt: null,
-      },
+    const where: any = {
+      deletedAt: null,
+    };
+
+    if (searchValue && ["username", "email"].includes(searchKey)) {
+      where[searchKey] = { contains: searchValue };
+    }
+
+    const [employees, total] = await Promise.all([
+      prisma.employee.findMany({
+        where,
+        skip,
+        take: Number(limit),
+        orderBy: { id: "desc" },
+      }),
+      prisma.employee.count({ where }),
+    ]);
+
+    res.status(200).json({
+      data: employees,
+      total,
+      page,
+      totalPages: Math.ceil(total / Number(limit)),
     });
-    res.status(200).json(employees);
   } catch (error: any) {
     res
       .status(500)
-      .json({ message: error?.message || "failed to fetch employees" });
+      .json({ message: error.message || "failed to fetch employees" });
   }
 };
 export const getEmployeeById = async (req: Request, res: Response) => {
@@ -49,7 +75,11 @@ export const createEmployee = async (req: Request, res: Response) => {
       contactNumber,
     } = req.body;
 
-    const photo = req.file ? `/uploads/${req.file.filename}` : null;
+    let photoKey: string | null = null;
+
+    if (req.file) {
+      photoKey = await uploadImageToS3(req.file);
+    }
 
     const newEmployee = await prisma.employee.create({
       data: {
@@ -60,7 +90,7 @@ export const createEmployee = async (req: Request, res: Response) => {
         firstName,
         email,
         contactNumber,
-        photo,
+        photo: photoKey,
       },
     });
 
@@ -91,7 +121,11 @@ export const updateEmployee = async (req: Request, res: Response) => {
       contactNumber,
     } = req.body;
 
-    const photo = req.file ? `/uploads/${req.file.filename}` : undefined;
+    let photoKey: string | null = null;
+
+    if (req.file) {
+      photoKey = await uploadImageToS3(req.file);
+    }
 
     const updatedEmployee = await prisma.employee.update({
       where: { id: Number(id) },
@@ -103,7 +137,7 @@ export const updateEmployee = async (req: Request, res: Response) => {
         firstName,
         email,
         contactNumber,
-        ...(photo && { photo }),
+        ...(photoKey && { photo: photoKey }),
       },
     });
 

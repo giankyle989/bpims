@@ -1,8 +1,9 @@
-import express from "express";
-import { login, logout } from "src/controllers/auth.controller";
+import { Router } from "express";
+import { getCurrentUser, login, logout } from "../controllers/auth.controller";
 
-const router = express.Router();
+const router = Router();
 
+router.get("/me", getCurrentUser);
 router.post("/login", login);
 router.post("/logout", logout);
 

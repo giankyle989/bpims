@@ -29,7 +29,7 @@ export default function RecordForm() {
     email: "",
     contactNumber: "",
   });
-
+  const [loading, setLoading] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
 
@@ -65,6 +65,7 @@ export default function RecordForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
     const form = new FormData();
 
     Object.entries(formData).forEach(([key, value]) => {
@@ -84,6 +85,8 @@ export default function RecordForm() {
       navigate("/dashboard");
     } catch (error) {
       console.error("failed to submit employee data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -246,8 +249,12 @@ export default function RecordForm() {
         </div>
 
         <div className="flex justify-center">
-          <Button type="submit" className="bg-blue-600 text-white">
-            {isEditMode ? "Update" : "Create"}
+          <Button
+            disabled={loading}
+            type="submit"
+            className="bg-blue-600 text-white"
+          >
+            {loading ? "Saving..." : isEditMode ? "Update" : "Create"}
           </Button>
         </div>
       </form>

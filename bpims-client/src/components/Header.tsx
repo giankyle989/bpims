@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
+import { logout } from "@/services/authService";
 
 export default function Header() {
+  const navigate = useNavigate();
   const location = useLocation();
   const [headerTitle, setHeaderTitle] = useState("");
 
@@ -22,10 +24,16 @@ export default function Header() {
     }
   }, [location.pathname]);
 
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
   return (
     <header className="bg-white border-b px-4 py-3 shadow-sm flex justify-between items-center w-full">
       <h1 className="text-lg font-semibold text-gray-800">{headerTitle}</h1>
-      <Button variant="outline">Logout</Button>
+      <Button onClick={handleLogout} variant="outline">
+        Logout
+      </Button>
     </header>
   );
 }

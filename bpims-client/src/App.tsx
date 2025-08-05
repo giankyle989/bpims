@@ -4,17 +4,24 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import RecordForm from "./pages/RecordForm";
 import NotFound from "./pages/NotFound";
+import AuthChecker from "./pages/AuthChecker";
 
 function App() {
   return (
     <Routes>
-      <Route element={<RootLayout />}>
-        <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<Login />} />
+      <Route
+        element={
+          <AuthChecker>
+            <RootLayout />
+          </AuthChecker>
+        }
+      >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/create" element={<RecordForm />} />
         <Route path="/update/:id" element={<RecordForm />} />
-        <Route path="*" element={<NotFound />} />
       </Route>
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
