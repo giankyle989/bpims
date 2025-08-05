@@ -41,6 +41,8 @@ From the root of the project, run:
 
  - Seed the database for account login
 
+Once the script is finished, you can now run client and server using `npm run dev`
+
 **Login Info:**
 
  - Username: admin
