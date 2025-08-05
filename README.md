@@ -45,3 +45,14 @@ From the root of the project, run:
 
  - Username: admin
  - Password: 1234
+
+
+## Techstack
+- React
+- Shadcn
+- Tailwind
+- Node
+- Express
+- Prisma
+- Mysql
+- AWS S3 and Cloudfront for image storage
