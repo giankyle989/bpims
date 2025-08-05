@@ -59,6 +59,9 @@ export default function Dashboard() {
       });
       setEmployees(data);
       setTotalPages(totalPages);
+      if (totalPages === 0) {
+        setPage(0);
+      }
     } catch (err) {
       console.error("failed to fetch employees:", err);
     }
@@ -239,7 +242,7 @@ export default function Dashboard() {
           <div className="flex gap-2">
             <Button
               size="sm"
-              disabled={page === 1}
+              disabled={page === 1 || page === 0}
               onClick={() => setPage((prev) => prev - 1)}
             >
               Previous
