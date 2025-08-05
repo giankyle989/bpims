@@ -45,6 +45,7 @@ From the root of the project, run:
 
       cd ../bpims-client
       npm install
+      cd ..
 
       cd bpims-server
       npm install
