@@ -43,7 +43,6 @@ From the root of the project, run:
 
  ---IF USING POWERSHELL---
 
-      `
       cd ../bpims-client
       npm install
 
@@ -55,7 +54,7 @@ From the root of the project, run:
 
       npx tsx prisma/seed.ts
 
-      cd ..`
+      cd ..
 
 Once the script is finished, you can now run client and server using `npm run dev`
 
