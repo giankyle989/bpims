@@ -12,7 +12,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/create" element={<RecordForm />} />
-        <Route path="/update" element={<RecordForm />} />
+        <Route path="/update/:id" element={<RecordForm />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

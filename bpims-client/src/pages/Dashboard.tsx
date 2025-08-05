@@ -17,7 +17,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import { useEffect, useState } from "react";
+import { deleteEmployee, getEmployees } from "@/services/employeeService";
+import No_Image_available from "@/assets/No_Image_Available.jpg";
 const columns = [
   { key: "photo", label: "Photo" },
   { key: "name", label: "Name" },
@@ -28,33 +30,36 @@ const columns = [
   { key: "action", label: "Action" },
 ] as const;
 
-type ColumnKey = (typeof columns)[number]["key"];
-
-type Row = {
-  [K in ColumnKey]?: string;
+type Employee = {
+  id: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  country: string;
+  accountType: string;
+  photo?: string;
 };
-
-const rows: Row[] = [
-  {
-    photo: "https://i.pravatar.cc/40?u=1",
-    name: "John Doe",
-    username: "johnd",
-    country: "USA",
-    email: "john@example.com",
-    accountType: "Admin",
-  },
-  {
-    photo: "https://i.pravatar.cc/40?u=2",
-    name: "Jane Smith",
-    username: "janes",
-    country: "Canada",
-    email: "jane@example.com",
-    accountType: "User",
-  },
-];
-
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [employees, setEmployees] = useState([]);
+
+  const fetchEmploye = async () => {
+    try {
+      const data = await getEmployees();
+      setEmployees(data);
+    } catch (err) {
+      console.error("failed to fetch employees:", err);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    await deleteEmployee(id);
+    await fetchEmploye();
+  };
+  useEffect(() => {
+    fetchEmploye();
+  }, []);
   return (
     <div>
       <div className="flex justify-end mb-4">
@@ -109,14 +114,13 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Table */}
         <Table>
           <TableHeader>
             <TableRow>
               {columns.map((col) => (
                 <TableHead
                   key={col.key}
-                  className="border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700"
+                  className="border px-4 py-2 text-sm font-medium"
                 >
                   {col.key === "photo" || col.key === "action" ? (
                     col.label
@@ -131,44 +135,56 @@ export default function Dashboard() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((row, i) => (
-              <TableRow key={i}>
+            {employees.map((emp) => (
+              <TableRow key={emp.id}>
                 {columns.map((col) => (
-                  <TableCell
-                    key={col.key}
-                    className="border border-gray-200 px-4 py-2 text-sm"
-                  >
-                    {col.key === "photo" && row[col.key] ? (
-                      <img
-                        src={row[col.key]}
-                        alt={row.name}
-                        className="w-24 h-24 object-cover"
-                      />
+                  <TableCell key={col.key} className="border px-4 py-2 text-sm">
+                    {col.key === "photo" ? (
+                      emp.photo ? (
+                        <img
+                          src={emp.photo}
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = No_Image_available;
+                          }}
+                          className="max-w-[100px] max-h-[100px] object-cover"
+                        />
+                      ) : (
+                        <img
+                          src={No_Image_available}
+                          className="max-w-[100px] max-h-[100px] object-cover"
+                        />
+                      )
+                    ) : col.key === "name" ? (
+                      `${emp.firstName} ${emp.lastName}`
                     ) : col.key === "action" ? (
                       <>
-                        <Button size="sm" className="bg-orange-500 mr-4">
+                        <Button
+                          size="sm"
+                          className="bg-orange-500 mr-2"
+                          onClick={() => navigate(`/update/${emp.id}`)}
+                        >
                           <svg
                             className="w-6 h-6 text-white"
                             xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
                             fill="none"
                             stroke="white"
+                            viewBox="0 0 24 24"
                           >
                             <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                             <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
                           </svg>
                         </Button>
-                        <Button className="bg-red-500">
+                        <Button
+                          className="bg-red-500"
+                          onClick={() => handleDelete(emp.id)}
+                        >
                           <svg
-                            xmlns="http://www.w3.org/2000/svg"
                             className="w-4 h-4 text-white"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             stroke="white"
+                            viewBox="0 0 24 24"
                           >
                             <path d="M10 11v6" />
                             <path d="M14 11v6" />
@@ -179,7 +195,7 @@ export default function Dashboard() {
                         </Button>
                       </>
                     ) : (
-                      row[col.key] ?? "-"
+                      emp[col.key as keyof Employee] ?? "-"
                     )}
                   </TableCell>
                 ))}

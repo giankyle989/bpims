@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -10,26 +10,80 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { createEmployee } from "@/services/employeeService";
+import {
+  createEmployee,
+  getEmployeeById,
+  updateEmployee,
+} from "@/services/employeeService";
 
 export default function RecordForm() {
   const navigate = useNavigate();
-  //   const { id } = useParams();
+  const { id } = useParams<{ id?: string }>();
+  const isEditMode = Boolean(id);
+  const [formData, setFormData] = useState({
+    country: "",
+    accountType: "",
+    username: "",
+    lastName: "",
+    firstName: "",
+    email: "",
+    contactNumber: "",
+  });
 
-  //   const isEditMode = Boolean(id);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
 
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    async function fetchEmployee() {
+      try {
+        const data = await getEmployeeById(Number(id));
+        setFormData({
+          country: data.country ?? "",
+          accountType: data.accountType ?? "",
+          username: data.username ?? "",
+          lastName: data.lastName ?? "",
+          firstName: data.firstName ?? "",
+          email: data.email ?? "",
+          contactNumber: data.contactNumber ?? "",
+        });
+        if (data.photoUrl) setPhotoPreview(data.photoUrl);
+      } catch (error) {
+        console.error("failed to load employee data:", error);
+      }
+    }
+    fetchEmployee();
+  }, [id, isEditMode]);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = new FormData(e.currentTarget);
-    if (photoFile) form.append("photo", photoFile);
+    const form = new FormData();
+
+    Object.entries(formData).forEach(([key, value]) => {
+      form.append(key, value);
+    });
+
+    if (photoFile) {
+      form.append("photo", photoFile);
+    }
 
     try {
-      await createEmployee(form);
+      if (isEditMode) {
+        await updateEmployee(Number(id), form);
+      } else {
+        await createEmployee(form);
+      }
       navigate("/dashboard");
     } catch (error) {
-      console.error("Failed to create employee:", error);
+      console.error("failed to submit employee data:", error);
     }
   };
 
@@ -50,66 +104,122 @@ export default function RecordForm() {
           <Label htmlFor="country">
             Country<span className="text-red-500">*</span>
           </Label>
-          <Select name="country" required>
+          <Select
+            name="country"
+            required
+            value={formData.country}
+            onValueChange={(value: string) =>
+              setFormData((prev) => ({ ...prev, country: value }))
+            }
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select country" />
             </SelectTrigger>
             <SelectContent className="bg-white">
-              <SelectItem value="Philippines">Philippines</SelectItem>
-              <SelectItem value="USA">USA</SelectItem>
-              <SelectItem value="Canada">Canada</SelectItem>
-              <SelectItem value="China">China</SelectItem>
-              <SelectItem value="Russia">Russia</SelectItem>
-              <SelectItem value="Japan">Japan</SelectItem>
+              {["Philippines", "USA", "Canada", "China", "Russia", "Japan"].map(
+                (country) => (
+                  <SelectItem key={country} value={country}>
+                    {country}
+                  </SelectItem>
+                )
+              )}
             </SelectContent>
           </Select>
         </div>
+
         <div className={formGroupStyle}>
           <Label htmlFor="accountType">
             Account Type<span className="text-red-500">*</span>
           </Label>
-          <Select name="accountType" required>
+          <Select
+            name="accountType"
+            required
+            value={formData.accountType}
+            onValueChange={(value: string) =>
+              setFormData((prev) => ({ ...prev, accountType: value }))
+            }
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select account type" />
             </SelectTrigger>
             <SelectContent className="bg-white">
-              <SelectItem value="Team Member">Team Member</SelectItem>
-              <SelectItem value="System Administrator">
-                System Administrator
-              </SelectItem>
-              <SelectItem value="Business Analyst">Business Analyst</SelectItem>
-              <SelectItem value="QA Tester">QA Tester</SelectItem>
+              {[
+                "Team Member",
+                "System Administrator",
+                "Business Analyst",
+                "QA Tester",
+              ].map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
+
         <div className={formGroupStyle}>
           <Label htmlFor="username">
             Username<span className="text-red-500">*</span>
           </Label>
-          <Input id="username" name="username" required />
+          <Input
+            id="username"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+          />
         </div>
+
         <div className={formGroupStyle}>
           <Label htmlFor="lastName">
             Last Name<span className="text-red-500">*</span>
           </Label>
-          <Input id="lastName" name="lastName" required />
+          <Input
+            id="lastName"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleChange}
+            required
+          />
         </div>
+
         <div className={formGroupStyle}>
           <Label htmlFor="firstName">
             First Name<span className="text-red-500">*</span>
           </Label>
-          <Input id="firstName" name="firstName" required />
+          <Input
+            id="firstName"
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleChange}
+            required
+          />
         </div>
+
         <div className={formGroupStyle}>
           <Label htmlFor="email">
             Email<span className="text-red-500">*</span>
           </Label>
-          <Input id="email" type="email" name="email" required />
+          <Input
+            id="email"
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
         </div>
+
         <div className={formGroupStyle}>
           <Label htmlFor="contactNumber">Contact Number</Label>
-          <Input id="contactNumber" name="contactNumber" />
+          <Input
+            id="contactNumber"
+            name="contactNumber"
+            value={formData.contactNumber}
+            onChange={handleChange}
+          />
         </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-[150px_1fr] gap-2 items-start">
           <Label htmlFor="photo">Photo (optional)</Label>
           <div className="flex flex-col gap-2">
@@ -137,7 +247,7 @@ export default function RecordForm() {
 
         <div className="flex justify-center">
           <Button type="submit" className="bg-blue-600 text-white">
-            Submit
+            {isEditMode ? "Update" : "Create"}
           </Button>
         </div>
       </form>
