@@ -41,6 +41,22 @@ From the root of the project, run:
 
  - Seed the database for account login
 
+ ---IF USING POWERSHELL---
+
+      `
+      cd ../bpims-client
+      npm install
+
+      cd bpims-server
+      npm install
+
+      npx prisma generate
+      npx prisma migrate dev --name init
+
+      npx tsx prisma/seed.ts
+
+      cd ..`
+
 Once the script is finished, you can now run client and server using `npm run dev`
 
 **Login Info:**
